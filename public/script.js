@@ -831,3 +831,114 @@ document.addEventListener('keydown', (e) => {
         closeConfigModal();
     }
 });
+
+// Developer Tools Functions
+function toggleDevTools() {
+    const devTools = document.getElementById('devTools');
+    devTools.classList.toggle('hidden');
+}
+
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+    
+    navigator.clipboard.writeText(text).then(() => {
+        // Show a brief success message
+        const button = event.target.closest('.copy-btn');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        button.style.background = '#10b981';
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.background = '#667eea';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        alert('Failed to copy to clipboard');
+    });
+}
+
+// Store request/response data for developer tools
+let lastRequestData = null;
+let lastResponseData = null;
+let requestStartTime = null;
+
+// Override the original search method to capture request/response data
+const originalSearch = FlightSearchApp.prototype.searchFlights;
+
+FlightSearchApp.prototype.searchFlights = async function(searchParams) {
+    // Capture request data
+    lastRequestData = {
+        endpoint: this.apiConfig.searchUrl,
+        method: 'POST',
+        timestamp: new Date().toISOString(),
+        params: searchParams
+    };
+    
+    // Update developer tools display
+    updateDevToolsDisplay();
+    
+    // Start timing
+    requestStartTime = Date.now();
+    
+    try {
+        const result = await originalSearch.call(this, searchParams);
+        
+        // Capture response data
+        lastResponseData = {
+            success: true,
+            timestamp: new Date().toISOString(),
+            data: result
+        };
+        
+        // Update developer tools display
+        updateDevToolsDisplay();
+        
+        return result;
+    } catch (error) {
+        // Capture error response
+        lastResponseData = {
+            success: false,
+            timestamp: new Date().toISOString(),
+            error: error.message,
+            details: error
+        };
+        
+        // Update developer tools display
+        updateDevToolsDisplay();
+        
+        throw error;
+    }
+};
+
+function updateDevToolsDisplay() {
+    // Update request display
+    if (lastRequestData) {
+        const requestDisplay = document.getElementById('lastRequest');
+        if (requestDisplay) {
+            requestDisplay.textContent = JSON.stringify(lastRequestData, null, 2);
+        }
+        
+        // Update request details
+        document.getElementById('requestEndpoint').textContent = lastRequestData.endpoint;
+        document.getElementById('requestMethod').textContent = lastRequestData.method;
+    }
+    
+    // Update response display
+    if (lastResponseData) {
+        const responseDisplay = document.getElementById('lastResponse');
+        if (responseDisplay) {
+            responseDisplay.textContent = JSON.stringify(lastResponseData, null, 2);
+        }
+        
+        // Update status
+        document.getElementById('requestStatus').textContent = lastResponseData.success ? 'Success' : 'Error';
+        
+        // Update response time
+        if (requestStartTime) {
+            const responseTime = Date.now() - requestStartTime;
+            document.getElementById('requestTime').textContent = `${responseTime}ms`;
+        }
+    }
+}

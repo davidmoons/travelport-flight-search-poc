@@ -9,7 +9,10 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static files
 app.use(express.static('public'));
+app.use(express.static('.'));
 
 // API Configuration
 const API_CONFIG = {
@@ -274,6 +277,15 @@ function buildSearchRequestBody(params) {
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Serve static files explicitly
+app.get('/styles.css', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'styles.css'));
+});
+
+app.get('/script.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'script.js'));
 });
 
 // Serve the main HTML file

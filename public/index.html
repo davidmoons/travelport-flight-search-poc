@@ -189,11 +189,64 @@
         </div>
 
         <footer class="footer">
-            <button class="config-btn" onclick="openConfigModal()">
-                <i class="fas fa-cog"></i>
-                API Configuration
-            </button>
+            <div class="footer-buttons">
+                <button class="config-btn" onclick="openConfigModal()">
+                    <i class="fas fa-cog"></i>
+                    API Configuration
+                </button>
+                <button class="dev-btn" onclick="toggleDevTools()">
+                    <i class="fas fa-code"></i>
+                    Developer Tools
+                </button>
+            </div>
         </footer>
+
+        <!-- Developer Tools Section -->
+        <div id="devTools" class="dev-tools hidden">
+            <div class="dev-tools-header">
+                <h3><i class="fas fa-code"></i> Developer Tools</h3>
+                <button class="close-dev-btn" onclick="toggleDevTools()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="dev-tools-content">
+                <div class="dev-section">
+                    <h4>Last API Request</h4>
+                    <button class="copy-btn" onclick="copyToClipboard('lastRequest')">
+                        <i class="fas fa-copy"></i> Copy JSON
+                    </button>
+                    <pre id="lastRequest" class="json-display">No request made yet</pre>
+                </div>
+                <div class="dev-section">
+                    <h4>Last API Response</h4>
+                    <button class="copy-btn" onclick="copyToClipboard('lastResponse')">
+                        <i class="fas fa-copy"></i> Copy JSON
+                    </button>
+                    <pre id="lastResponse" class="json-display">No response received yet</pre>
+                </div>
+                <div class="dev-section">
+                    <h4>Request Details</h4>
+                    <div class="request-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Endpoint:</span>
+                            <span class="detail-value" id="requestEndpoint">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Method:</span>
+                            <span class="detail-value" id="requestMethod">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value" id="requestStatus">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Response Time:</span>
+                            <span class="detail-value" id="requestTime">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
