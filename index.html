@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travelport Flight Search - POC</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-plane"></i>
+                <h1>Travelport Flight Search</h1>
+            </div>
+            <p class="subtitle">Search for flights using Travelport API</p>
+        </header>
+
+        <main class="main-content">
+            <div class="search-card">
+                <form id="flightSearchForm" class="search-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="origin">From</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <input type="text" id="origin" name="origin" placeholder="Origin city or airport code" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="destination">To</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <input type="text" id="destination" name="destination" placeholder="Destination city or airport code" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="departureDate">Departure Date</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-calendar-alt"></i>
+                                <input type="date" id="departureDate" name="departureDate" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="returnDate">Return Date</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-calendar-alt"></i>
+                                <input type="date" id="returnDate" name="returnDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="passengers">Passengers</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-users"></i>
+                                <select id="passengers" name="passengers">
+                                    <option value="1">1 Passenger</option>
+                                    <option value="2" selected>2 Passengers</option>
+                                    <option value="3">3 Passengers</option>
+                                    <option value="4">4 Passengers</option>
+                                    <option value="5">5 Passengers</option>
+                                    <option value="6">6 Passengers</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cabinClass">Cabin Class</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-chair"></i>
+                                <select id="cabinClass" name="cabinClass">
+                                    <option value="Economy">Economy</option>
+                                    <option value="Premium Economy">Premium Economy</option>
+                                    <option value="Business">Business</option>
+                                    <option value="First">First</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="flightType">Flight Type</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-route"></i>
+                                <select id="flightType" name="flightType">
+                                    <option value="StopDirect">Direct flights only</option>
+                                    <option value="StopOne">1 stop or less</option>
+                                    <option value="StopTwo">2 stops or less</option>
+                                    <option value="StopAny">Any number of stops</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+            <div class="form-group">
+                <label for="carriers">Preferred Airlines (Optional)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-plane"></i>
+                    <input type="text" id="carriers" name="carriers" placeholder="e.g., LH, BA, AF (comma-separated airline codes)">
+                </div>
+                <small class="help-text">Enter airline codes separated by commas (e.g., LH, BA, AF). Leave empty to search all airlines.</small>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="pricingPCC">Pricing PCC (Optional)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-tag"></i>
+                    <input type="text" id="pricingPCC" name="pricingPCC" placeholder="e.g., 23N1, 33N1 (leave empty for default pricing)">
+                </div>
+                <small class="help-text">Enter a specific Pricing PCC to compare pricing. Leave empty to use default pricing only.</small>
+            </div>
+        </div>
+
+
+                    <div class="form-actions">
+                        <button type="submit" class="search-btn" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                            Search Flights
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state hidden">
+                <div class="spinner"></div>
+                <p>Searching for flights...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="results-section hidden">
+                <h2>Search Results</h2>
+                <div id="resultsContainer" class="results-container">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="error-state hidden">
+                <div class="error-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3>Search Error</h3>
+                <p id="errorMessage">Something went wrong. Please try again.</p>
+                <button class="retry-btn" onclick="hideError()">Try Again</button>
+            </div>
+        </main>
+
+        <!-- API Configuration Modal -->
+        <div id="configModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>API Configuration</h3>
+                    <button class="close-btn" onclick="closeConfigModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="apiUsername">Username</label>
+                        <input type="text" id="apiUsername" placeholder="TP83533767">
+                    </div>
+                    <div class="form-group">
+                        <label for="apiPassword">Password</label>
+                        <input type="password" id="apiPassword" placeholder="Your password">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientId">Client ID</label>
+                        <input type="text" id="clientId" placeholder="pp-2r85eJ8HT7YVZwUqVLPxZBjiEjpuUuP6r3zfLPjO">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientSecret">Client Secret</label>
+                        <input type="password" id="clientSecret" placeholder="Your client secret">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="save-btn" onclick="saveConfig()">Save Configuration</button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <button class="config-btn" onclick="openConfigModal()">
+                <i class="fas fa-cog"></i>
+                API Configuration
+            </button>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
