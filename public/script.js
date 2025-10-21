@@ -885,6 +885,20 @@ FlightSearchApp.prototype.searchFlights = async function(searchParams) {
     try {
         const result = await originalSearch.call(this, searchParams);
         
+        // Fetch the actual Travelport API request details from server
+        try {
+            const apiRequestResponse = await fetch('/api/dev/last-request');
+            if (apiRequestResponse.ok) {
+                const apiRequestData = await apiRequestResponse.json();
+                lastRequestData = {
+                    ...lastRequestData,
+                    travelportApi: apiRequestData
+                };
+            }
+        } catch (err) {
+            console.log('Could not fetch API request details:', err);
+        }
+        
         // Capture response data
         lastResponseData = {
             success: true,
@@ -917,12 +931,22 @@ function updateDevToolsDisplay() {
     if (lastRequestData) {
         const requestDisplay = document.getElementById('lastRequest');
         if (requestDisplay) {
-            requestDisplay.textContent = JSON.stringify(lastRequestData, null, 2);
+            // Show the actual Travelport API request if available
+            if (lastRequestData.travelportApi) {
+                requestDisplay.textContent = JSON.stringify(lastRequestData.travelportApi, null, 2);
+            } else {
+                requestDisplay.textContent = JSON.stringify(lastRequestData, null, 2);
+            }
         }
         
         // Update request details
-        document.getElementById('requestEndpoint').textContent = lastRequestData.endpoint;
-        document.getElementById('requestMethod').textContent = lastRequestData.method;
+        if (lastRequestData.travelportApi) {
+            document.getElementById('requestEndpoint').textContent = lastRequestData.travelportApi.url;
+            document.getElementById('requestMethod').textContent = lastRequestData.travelportApi.method;
+        } else {
+            document.getElementById('requestEndpoint').textContent = lastRequestData.endpoint;
+            document.getElementById('requestMethod').textContent = lastRequestData.method;
+        }
     }
     
     // Update response display

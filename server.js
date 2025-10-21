@@ -28,6 +28,9 @@ const API_CONFIG = {
 let accessToken = null;
 let tokenExpiry = null;
 
+// Store last API request details for developer tools
+let lastApiRequest = null;
+
 // OAuth endpoint
 app.post('/api/oauth', async (req, res) => {
     try {
@@ -85,31 +88,48 @@ app.post('/api/search', async (req, res) => {
         if (hasCustomPCC) {
             console.log('Custom PricingPCC provided:', req.body.pricingPCC, '- Making dual requests for comparison');
             
+            // Prepare request details for dual requests
+            const requestHeaders = {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'XAUTH_TRAVELPORT_ACCESSGROUP': '006C2E1A-5BAF-4503-BA51-B51F163E4727',
+                'Accept-Version': '11',
+                'Content-Version': '11',
+                'taxBreakDown': 'true'
+            };
+
+            const defaultBody = buildSearchRequestBody({...req.body, pricingPCC: null});
+            const customBody = buildSearchRequestBody(req.body);
+
+            // Store the actual Travelport API request details (custom PCC request)
+            lastApiRequest = {
+                url: API_CONFIG.searchUrl,
+                method: 'POST',
+                headers: requestHeaders,
+                body: customBody,
+                timestamp: new Date().toISOString(),
+                dualRequest: {
+                    default: {
+                        body: defaultBody,
+                        headers: requestHeaders
+                    },
+                    custom: {
+                        body: customBody,
+                        headers: requestHeaders
+                    }
+                }
+            };
+
             // Make two requests: one with default PCC and one with custom PCC
             const [defaultResponse, customResponse] = await Promise.all([
                 // Default request (without custom PCC)
-                axios.post(API_CONFIG.searchUrl, buildSearchRequestBody({...req.body, pricingPCC: null}), {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'XAUTH_TRAVELPORT_ACCESSGROUP': '006C2E1A-5BAF-4503-BA51-B51F163E4727',
-                        'Accept-Version': '11',
-                        'Content-Version': '11',
-                        'taxBreakDown': 'true'
-                    }
+                axios.post(API_CONFIG.searchUrl, defaultBody, {
+                    headers: requestHeaders
                 }),
                 // Custom PCC request
-                axios.post(API_CONFIG.searchUrl, buildSearchRequestBody(req.body), {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'XAUTH_TRAVELPORT_ACCESSGROUP': '006C2E1A-5BAF-4503-BA51-B51F163E4727',
-                        'Accept-Version': '11',
-                        'Content-Version': '11',
-                        'taxBreakDown': 'true'
-                    }
+                axios.post(API_CONFIG.searchUrl, customBody, {
+                    headers: requestHeaders
                 })
             ]);
             
@@ -139,16 +159,28 @@ app.post('/api/search', async (req, res) => {
             console.log('Search request body:', JSON.stringify(searchBody, null, 2));
             console.log('ConnectionType being sent:', searchBody.CatalogProductOfferingsRequest.SearchModifiersAir?.ConnectionType);
 
+            // Capture API request details for developer tools
+            const requestHeaders = {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'XAUTH_TRAVELPORT_ACCESSGROUP': '006C2E1A-5BAF-4503-BA51-B51F163E4727',
+                'Accept-Version': '11',
+                'Content-Version': '11',
+                'taxBreakDown': 'true'
+            };
+
+            // Store the actual Travelport API request details
+            lastApiRequest = {
+                url: API_CONFIG.searchUrl,
+                method: 'POST',
+                headers: requestHeaders,
+                body: searchBody,
+                timestamp: new Date().toISOString()
+            };
+
             const response = await axios.post(API_CONFIG.searchUrl, searchBody, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'XAUTH_TRAVELPORT_ACCESSGROUP': '006C2E1A-5BAF-4503-BA51-B51F163E4727',
-                    'Accept-Version': '11',
-                    'Content-Version': '11',
-                    'taxBreakDown': 'true'
-                }
+                headers: requestHeaders
             });
 
             console.log('Search successful, results received');
@@ -277,6 +309,11 @@ function buildSearchRequestBody(params) {
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Developer tools endpoint - get last API request details
+app.get('/api/dev/last-request', (req, res) => {
+    res.json(lastApiRequest);
 });
 
 // Serve static files explicitly
